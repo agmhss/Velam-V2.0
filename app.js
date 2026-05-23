@@ -174,6 +174,7 @@ window.generateGrid = function() {
     else if (mode === 'substitution') renderSubstituteSchedule();
 };
 
+// --- DYNAMIC HTML BOARD UPDATE FOR LOAD STATUS ---
 function updateClassLoadUI() {
     const loadStatusDiv = document.getElementById('loadStatus');
     if (!loadStatusDiv) return;
@@ -191,12 +192,27 @@ function updateClassLoadUI() {
         getIndividualClasses(req.className).forEach(cls => allUniqueClasses.add(cls));
     });
 
-    let html = '';
+    let html = '<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full">';
+    
     Array.from(allUniqueClasses).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(cls => {
         let count = classCounts[cls] || 0;
-        let colorClass = count >= 40 ? 'bg-red-500 text-white border-red-600' : 'bg-green-500 text-white border-green-600';
-        html += `<span class="px-2 py-1 rounded text-xs font-bold border ${colorClass} transition-all">${cls}: ${count}/40</span>`;
+        let percentage = Math.min((count / 40) * 100, 100);
+        let statusColor = count === 40 ? 'bg-green-500' : (count > 40 ? 'bg-red-500' : 'bg-blue-500');
+        
+        html += `
+            <div class="bg-gray-50 p-2 rounded border border-gray-200">
+                <div class="flex justify-between text-[10px] font-bold text-gray-700 mb-1">
+                    <span>${cls}</span>
+                    <span>${count}/40</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-1.5">
+                    <div class="${statusColor} h-1.5 rounded-full" style="width: ${percentage}%"></div>
+                </div>
+            </div>
+        `;
     });
+    
+    html += '</div>';
     loadStatusDiv.innerHTML = html || '<span class="text-gray-400 text-xs">No active classes monitored.</span>';
 }
 
